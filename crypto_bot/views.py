@@ -3,36 +3,42 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from .services.coingecko import get_crypto_prices, format_prices
+from .services.parser import parse_command
+
 
 # Create your views here.
 
 @csrf_exempt
 def webhook(request):
 
-    if request.method == "POST":
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"})
 
-        data = json.loads(request.body)
+    data = json.loads(request.body)
 
-        message = data.get("message", "").lower()
+    message = data.get("message", "").lower()
 
-        # handle price command
-        if message == "price":
+    print("Incoming message:", message)
 
-            prices = get_crypto_prices()
+    command = parse_command(message)
 
-            if not prices:
-                return JsonResponse({"reply": "Error fetching prices"})
-
-            reply = format_prices(prices)
-
-            return JsonResponse({"reply": reply})
-
-        # unknown command
+    if not command:
         return JsonResponse({
-            "reply": "Unknown command. Try: price"
+            "reply": "Unknown command. Try: price, btc, eth"
         })
 
-    return JsonResponse({"error": "Invalid request"})
+    prices = get_crypto_prices()
+
+    if not prices:
+        return JsonResponse({
+            "reply": "Error fetching crypto prices"
+        })
+
+    reply = format_prices(prices)
+
+    return JsonResponse({
+        "reply": reply
+    })
 
 
 # @csrf_exempt
