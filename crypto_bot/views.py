@@ -9,23 +9,51 @@ from .services.parser import parse_command
 
 # Create your views here.
 
+logger = logging.getLogger(__name__)
+
 def health(request):
     return JsonResponse({"status": "ok"})
 
 @csrf_exempt
 def webhook(request):
 
+    # Validate HTTP method
     if request.method != "POST":
-        return JsonResponse({"error": "Invalid request method"})
+        return JsonResponse(
+            {"error": "Only POST requests allowed"},
+            status=405
+        )
 
-    data = json.loads(request.body)
+    # Validate body exists
+    if not request.body:
+        return JsonResponse(
+            {"error": "Empty request body"},
+            status=400
+        )
 
-    message = data.get("message", "").lower()
+    # Validate JSON format
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse(
+            {"error": "Invalid JSON"},
+            status=400
+        )
 
-    # print("Incoming message:", message)
-    logger = logging.getLogger(__name__)
+    # Validate message field
+    message = data.get("message")
+
+    if not message:
+        return JsonResponse(
+            {"error": "Missing 'message' field"},
+            status=400
+        )
+
+    message = message.lower().strip()
+
     logger.info("Incoming message: %s", message)
 
+    # Parse command
     command = parse_command(message)
 
     if not command:
@@ -33,19 +61,21 @@ def webhook(request):
             "reply": "Unknown command. Try: price, btc, eth"
         })
 
+    # Fetch crypto prices
     prices = get_crypto_prices()
 
     if not prices:
+        logger.warning("Failed to fetch crypto prices")
         return JsonResponse({
             "reply": "Error fetching crypto prices"
         })
 
+    # Format response
     reply = format_prices(prices, command["coins"])
 
     return JsonResponse({
         "reply": reply
     })
-
 
 # @csrf_exempt
 # def webhook(request):
