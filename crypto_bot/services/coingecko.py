@@ -29,18 +29,29 @@ def format_prices(data):
     eth_usdt = eth.get("usdt", "N/A")
     eth_pkr = eth.get("pkr", "N/A")
 
+    # Calculate ETH <-> PKR relation (if both values exist)
+    usd_pkr_ratio = "N/A"
+    if eth_usd != "N/A" and eth_pkr != "N/A":
+        try:
+            usd_pkr_ratio = round(float(eth_pkr) / float(eth_usd), 2)
+        except Exception:
+            usd_pkr_ratio = "N/A"
+
     message = f"""
  Crypto Prices
 
  BTC
- - USD: {btc_usd}
- - USDT: {btc_usdt}
- - PKR: {btc_pkr}
+ > USD: {btc_usd}
+ > USDT: {btc_usdt}
+ > PKR: {btc_pkr}
 
  ETH
- - USD: {eth_usd}
- - USDT: {eth_usdt}
- - PKR: {eth_pkr}
+ > USD: {eth_usd}
+ > USDT: {eth_usdt}
+ > PKR: {eth_pkr}
+ 
+ USD ↔ PKR Ratio
+ > 1 USD ≈ {usd_pkr_ratio} PKR
 """
 
     return message.strip()
