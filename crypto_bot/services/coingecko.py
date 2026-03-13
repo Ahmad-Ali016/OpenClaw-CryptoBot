@@ -6,51 +6,68 @@ COINGECKO_URL = "https://api.coingecko.com/api/v3/simple/price"
 def get_crypto_prices():
     params = {
         "ids": "bitcoin,ethereum",
-        "vs_currencies": "usd,pkr"
+        "vs_currencies": "usd,usdt,pkr"
     }
 
-    response = requests.get(COINGECKO_URL, params=params)
+    try:
+        response = requests.get(COINGECKO_URL, params=params)
 
-    if response.status_code != 200:
+        print("CoinGecko Status:", response.status_code)
+
+        if response.status_code != 200:
+            print("CoinGecko Response:", response.text)
+            return None
+
+        data = response.json()
+        print("CoinGecko Data:", data)
+
+        return data
+
+    except Exception as e:
+        print("CoinGecko Error:", str(e))
         return None
 
-    return response.json()
 
+def format_prices(data, coins=None):
 
-def format_prices(data):
-    btc = data.get("bitcoin", {})
-    eth = data.get("ethereum", {})
+    if coins is None:
+        coins = ["bitcoin", "ethereum"]
 
-    btc_usd = btc.get("usd", "N/A")
-    btc_usdt = btc.get("usdt", "N/A")
-    btc_pkr = btc.get("pkr", "N/A")
+    coin_labels = {
+        "bitcoin": "BTC",
+        "ethereum": "ETH"
+    }
 
-    eth_usd = eth.get("usd", "N/A")
-    eth_usdt = eth.get("usdt", "N/A")
-    eth_pkr = eth.get("pkr", "N/A")
+    message = "Crypto Prices\n\n"
 
-    # Calculate ETH <-> PKR relation (if both values exist)
-    usd_pkr_ratio = "N/A"
-    if eth_usd != "N/A" and eth_pkr != "N/A":
-        try:
-            usd_pkr_ratio = round(float(eth_pkr) / float(eth_usd), 2)
-        except Exception:
-            usd_pkr_ratio = "N/A"
+    usd_pkr_ratio = None
 
-    message = f"""
- Crypto Prices
+    for coin in coins:
 
- BTC
- > USD: {btc_usd}
- > USDT: {btc_usdt}
- > PKR: {btc_pkr}
+        coin_data = data.get(coin, {})
 
- ETH
- > USD: {eth_usd}
- > USDT: {eth_usdt}
- > PKR: {eth_pkr}
- 
- USD ↔ PKR Ratio
+        usd = coin_data.get("usd", "N/A")
+        usdt = coin_data.get("usdt", "N/A")
+        pkr = coin_data.get("pkr", "N/A")
+
+        label = coin_labels.get(coin, coin.upper())
+
+        message += f"""{label}
+ > USD: {usd}
+ > USDT: {usdt}
+ > PKR: {pkr}
+
+"""
+
+        # calculate ratio if possible
+        if usd != "N/A" and pkr != "N/A" and usd_pkr_ratio is None:
+            try:
+                usd_pkr_ratio = round(float(pkr) / float(usd), 2)
+            except Exception:
+                pass
+
+    if usd_pkr_ratio:
+        message += f"""USD ↔ PKR Ratio
  > 1 USD ≈ {usd_pkr_ratio} PKR
 """
 

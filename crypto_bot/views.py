@@ -34,7 +34,7 @@ def webhook(request):
             "reply": "Error fetching crypto prices"
         })
 
-    reply = format_prices(prices)
+    reply = format_prices(prices, command["coins"])
 
     return JsonResponse({
         "reply": reply
