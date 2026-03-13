@@ -1,12 +1,16 @@
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+import logging
 
 from .services.coingecko import get_crypto_prices, format_prices
 from .services.parser import parse_command
 
 
 # Create your views here.
+
+def health(request):
+    return JsonResponse({"status": "ok"})
 
 @csrf_exempt
 def webhook(request):
@@ -18,7 +22,9 @@ def webhook(request):
 
     message = data.get("message", "").lower()
 
-    print("Incoming message:", message)
+    # print("Incoming message:", message)
+    logger = logging.getLogger(__name__)
+    logger.info("Incoming message: %s", message)
 
     command = parse_command(message)
 

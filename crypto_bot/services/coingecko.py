@@ -1,4 +1,7 @@
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 COINGECKO_URL = "https://api.coingecko.com/api/v3/simple/price"
 
@@ -10,22 +13,33 @@ def get_crypto_prices():
     }
 
     try:
-        response = requests.get(COINGECKO_URL, params=params)
+        response = requests.get(
+            COINGECKO_URL,
+            params=params,
+            timeout=10,
+            headers={"User-Agent": "OpenClaw-CryptoBot"}
+        )
 
-        print("CoinGecko Status:", response.status_code)
+        # print("CoinGecko Status:", response.status_code)
+        logger.info("CoinGecko status: %s", response.status_code)
 
         if response.status_code != 200:
-            print("CoinGecko Response:", response.text)
+            # print("CoinGecko Response:", response.text)
+            logger.warning("CoinGecko response: %s", response.text)
             return None
 
         data = response.json()
-        print("CoinGecko Data:", data)
+        # print("CoinGecko Data:", data)
+
+        logger.debug("CoinGecko data: %s", data)
 
         return data
 
     except Exception as e:
-        print("CoinGecko Error:", str(e))
+        # print("CoinGecko Error:", str(e))
+        logger.error("CoinGecko error: %s", str(e))
         return None
+
 
 
 def format_prices(data, coins=None):
