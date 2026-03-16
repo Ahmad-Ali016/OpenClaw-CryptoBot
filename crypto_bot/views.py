@@ -38,7 +38,7 @@ def webhook(request):
             status=400
         )
 
-    # Validate message field, extracting message from possible payload formats
+    # Extract message from multiple payload formats
     message = (
             data.get("message")
             or data.get("text")
@@ -55,14 +55,7 @@ def webhook(request):
             status=400
         )
 
-    if not message:
-        return JsonResponse(
-            {"error": "Missing 'message' field"},
-            status=400
-        )
-
     message = message.lower().strip()
-
     logger.info("Incoming message: %s", message)
 
     # Parse command
