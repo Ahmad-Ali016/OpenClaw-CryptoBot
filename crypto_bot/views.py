@@ -6,7 +6,6 @@ import logging
 from .services.coingecko import get_crypto_prices, format_prices
 from .services.parser import parse_command
 
-
 # Create your views here.
 
 logger = logging.getLogger(__name__)
@@ -16,7 +15,6 @@ def health(request):
 
 @csrf_exempt
 def webhook(request):
-
     # Validate HTTP method
     if request.method != "POST":
         return JsonResponse(
@@ -40,8 +38,22 @@ def webhook(request):
             status=400
         )
 
-    # Validate message field
-    message = data.get("message")
+    # Validate message field, extracting message from possible payload formats
+    message = (
+            data.get("message")
+            or data.get("text")
+            or data.get("body")
+    )
+
+    # Handle nested formats like { "message": { "text": "price" } }
+    if isinstance(message, dict):
+        message = message.get("text")
+
+    if not message:
+        return JsonResponse(
+            {"error": "Missing 'message' field"},
+            status=400
+        )
 
     if not message:
         return JsonResponse(
