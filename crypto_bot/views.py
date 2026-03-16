@@ -67,7 +67,7 @@ def webhook(request):
         })
 
     # Fetch crypto prices
-    prices = get_crypto_prices()
+    prices = get_crypto_prices(command["coins"])
 
     if not prices:
         logger.warning("Failed to fetch crypto prices")

@@ -6,9 +6,9 @@ logger = logging.getLogger(__name__)
 COINGECKO_URL = "https://api.coingecko.com/api/v3/simple/price"
 
 
-def get_crypto_prices():
+def get_crypto_prices(coins):
     params = {
-        "ids": "bitcoin,ethereum",
+        "ids": ",".join(coins),
         "vs_currencies": "usd,usdt,pkr"
     }
 
